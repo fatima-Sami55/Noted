@@ -23,8 +23,8 @@ router.get('/me', (req, res) => {
       username: req.user.username,
       email: req.user.email,
       is_verified: req.user.is_verified === 1 || req.user.is_verified === true,
-      avatar_style: avatarsStore.getAvatar(userId),
-      avatar: avatarsStore.getAvatar(userId)
+      avatar_style: req.user.avatar || 'avatar',
+      avatar: req.user.avatar || 'avatar'
     });
   } else {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -176,10 +176,10 @@ router.post('/resend-verification', (req, res, next) => {
       return res.status(400).json({ error: 'Your email is already verified.' });
     }
 
-    if (tokenHelper.isTokenActive(user.verify_token, user.verify_token_at)) {
+    if (tokenHelper.isResendThrottled(user.verify_token_at, 2)) {
       return res.status(429).json({
-        message: "A verification email was already sent.",
-        resend_available_at: tokenHelper.getResendAvailableAt(user.verify_token_at),
+        message: "A verification email was already sent recently.",
+        resend_available_at: tokenHelper.getResendAvailableAt(user.verify_token_at, 2),
         already_sent: true
       });
     }
@@ -248,8 +248,8 @@ router.post('/login', (req, res, next) => {
             userid: userId,
             username: user.username,
             email: user.email,
-            avatar_style: avatarsStore.getAvatar(userId),
-            avatar: avatarsStore.getAvatar(userId)
+            avatar_style: user.avatar || 'avatar',
+            avatar: user.avatar || 'avatar'
           }
         });
       });
@@ -275,10 +275,10 @@ router.post('/forgot-password', (req, res, next) => {
 
     const user = rows[0];
 
-    if (tokenHelper.isTokenActive(user.reset_token, user.reset_token_at)) {
+    if (tokenHelper.isResendThrottled(user.reset_token_at, 2)) {
       return res.status(429).json({
-        message: "A password reset email was already sent.",
-        resend_available_at: tokenHelper.getResendAvailableAt(user.reset_token_at),
+        message: "A password reset email was already sent recently.",
+        resend_available_at: tokenHelper.getResendAvailableAt(user.reset_token_at, 2),
         already_sent: true
       });
     }
@@ -375,18 +375,21 @@ router.get('/logout', (req, res) => {
 });
 
 // PUT /api/me/avatar - Update user's avatar style selection
-router.put('/me/avatar', (req, res) => {
+router.put('/me/avatar', (req, res, next) => {
   if (req.isAuthenticated() && req.user) {
     const { style } = req.body;
     if (!style) {
       return res.status(400).json({ error: 'Avatar style is required' });
     }
     const userId = getReqUserId(req.user);
-    avatarsStore.setAvatar(userId, style);
-    return res.json({
-      success: true,
-      message: 'Avatar updated successfully',
-      avatar: style
+    avatarsStore.setAvatar(userId, style, (err) => {
+      if (err) return next(err);
+      req.user.avatar = style;
+      return res.json({
+        success: true,
+        message: 'Avatar updated successfully',
+        avatar: style
+      });
     });
   } else {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -394,62 +397,70 @@ router.put('/me/avatar', (req, res) => {
 });
 
 // GET /api/folders - Get user's custom folders/lists
-router.get('/folders', (req, res) => {
+router.get('/folders', (req, res, next) => {
   if (req.isAuthenticated() && req.user) {
     const userId = getReqUserId(req.user);
-    const folders = foldersStore.getFolders(userId);
-    return res.json(folders);
+    foldersStore.getFolders(userId, (err, folders) => {
+      if (err) return next(err);
+      return res.json(folders);
+    });
   } else {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });
 
 // POST /api/folders - Create a new folder/list
-router.post('/folders', (req, res) => {
+router.post('/folders', (req, res, next) => {
   if (req.isAuthenticated() && req.user) {
     const { name } = req.body;
     if (!name || name.trim() === '') {
       return res.status(400).json({ error: 'Folder name is required' });
     }
     const userId = getReqUserId(req.user);
-    const result = foldersStore.createFolder(userId, name.trim());
-    if (result.success) {
-      return res.json(result.folders);
-    } else {
-      return res.status(400).json({ error: result.error });
-    }
+    foldersStore.createFolder(userId, name.trim(), (err, result) => {
+      if (err) return next(err);
+      if (result.success) {
+        return res.json(result.folders);
+      } else {
+        return res.status(400).json({ error: result.error });
+      }
+    });
   } else {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });
 
 // PUT /api/folders/:name/star - Toggle starred status of a folder
-router.put('/folders/:name/star', (req, res) => {
+router.put('/folders/:name/star', (req, res, next) => {
   if (req.isAuthenticated() && req.user) {
     const { name } = req.params;
     const userId = getReqUserId(req.user);
-    const result = foldersStore.toggleStarFolder(userId, name);
-    if (result.success) {
-      return res.json(result.folders);
-    } else {
-      return res.status(404).json({ error: result.error });
-    }
+    foldersStore.toggleStarFolder(userId, name, (err, result) => {
+      if (err) return next(err);
+      if (result.success) {
+        return res.json(result.folders);
+      } else {
+        return res.status(404).json({ error: result.error });
+      }
+    });
   } else {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 });
 
 // DELETE /api/folders/:name - Delete a custom folder
-router.delete('/folders/:name', (req, res) => {
+router.delete('/folders/:name', (req, res, next) => {
   if (req.isAuthenticated() && req.user) {
     const { name } = req.params;
     const userId = getReqUserId(req.user);
-    const result = foldersStore.deleteFolder(userId, name);
-    if (result.success) {
-      return res.json(result.folders);
-    } else {
-      return res.status(400).json({ error: result.error });
-    }
+    foldersStore.deleteFolder(userId, name, (err, result) => {
+      if (err) return next(err);
+      if (result.success) {
+        return res.json(result.folders);
+      } else {
+        return res.status(400).json({ error: result.error });
+      }
+    });
   } else {
     return res.status(401).json({ error: 'Unauthorized' });
   }

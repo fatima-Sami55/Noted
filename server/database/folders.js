@@ -1,6 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-const filePath = path.join(__dirname, 'folders.json');
+const db = require('./db');
 
 const DEFAULT_FOLDERS = [
   { name: 'Personal', starred: true },
@@ -8,81 +6,79 @@ const DEFAULT_FOLDERS = [
   { name: 'Tasks', starred: false }
 ];
 
-function getFoldersStore() {
-  try {
-    if (!fs.existsSync(filePath)) {
-      fs.writeFileSync(filePath, '{}', 'utf8');
-      return {};
+function getFolders(userId, callback) {
+  db.query('SELECT name, starred FROM [folder] WHERE userid = ?', [userId], (err, rows) => {
+    if (err) return callback(err);
+    if (rows.length === 0) {
+      // User has no folders yet, let's insert defaults!
+      const insertSql = 'INSERT INTO [folder] (userid, name, starred) VALUES (?, ?, 1), (?, ?, 1), (?, ?, 0)';
+      const params = [userId, 'Personal', userId, 'Ideas', userId, 'Tasks'];
+      db.query(insertSql, params, (err2) => {
+        if (err2) return callback(err2);
+        // Query again to return
+        db.query('SELECT name, starred FROM [folder] WHERE userid = ?', [userId], (err3, rows3) => {
+          if (err3) return callback(err3);
+          const result = rows3.map(r => ({ name: r.name, starred: r.starred === 1 || r.starred === true }));
+          callback(null, result);
+        });
+      });
+    } else {
+      const result = rows.map(r => ({ name: r.name, starred: r.starred === 1 || r.starred === true }));
+      callback(null, result);
     }
-    const data = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(data || '{}');
-  } catch (e) {
-    console.error("Failed to read folders.json:", e);
-    return {};
-  }
-}
-
-function saveFoldersStore(data) {
-  try {
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
-  } catch (e) {
-    console.error("Failed to save folders.json:", e);
-  }
+  });
 }
 
 module.exports = {
-  getFolders(userId) {
-    const store = getFoldersStore();
-    if (!store[userId]) {
-      // Initialize with defaults
-      store[userId] = JSON.parse(JSON.stringify(DEFAULT_FOLDERS));
-      saveFoldersStore(store);
-    }
-    return store[userId];
-  },
+  getFolders,
   
-  createFolder(userId, name) {
-    const store = getFoldersStore();
-    if (!store[userId]) {
-      store[userId] = JSON.parse(JSON.stringify(DEFAULT_FOLDERS));
-    }
+  createFolder(userId, name, callback) {
     // Prevent duplicate folder names (case-insensitive)
-    const exists = store[userId].some(f => f.name.toLowerCase() === name.toLowerCase());
-    if (!exists) {
-      store[userId].push({ name, starred: false });
-      saveFoldersStore(store);
-      return { success: true, folders: store[userId] };
-    }
-    return { success: false, error: 'Folder already exists' };
+    db.query('SELECT name FROM [folder] WHERE userid = ? AND LOWER(name) = ?', [userId, name.toLowerCase()], (err, rows) => {
+      if (err) return callback(err);
+      if (rows.length > 0) {
+        return callback(null, { success: false, error: 'Folder already exists' });
+      }
+      db.query('INSERT INTO [folder] (userid, name, starred) VALUES (?, ?, 0)', [userId, name], (err2) => {
+        if (err2) return callback(err2);
+        getFolders(userId, (err3, folders) => {
+          if (err3) return callback(err3);
+          callback(null, { success: true, folders });
+        });
+      });
+    });
   },
 
-  toggleStarFolder(userId, name) {
-    const store = getFoldersStore();
-    if (!store[userId]) {
-      store[userId] = JSON.parse(JSON.stringify(DEFAULT_FOLDERS));
-    }
-    const folder = store[userId].find(f => f.name.toLowerCase() === name.toLowerCase());
-    if (folder) {
-      folder.starred = !folder.starred;
-      saveFoldersStore(store);
-      return { success: true, folders: store[userId] };
-    }
-    return { success: false, error: 'Folder not found' };
+  toggleStarFolder(userId, name, callback) {
+    const sql = 'UPDATE [folder] SET starred = CASE WHEN starred = 1 THEN 0 ELSE 1 END WHERE userid = ? AND LOWER(name) = ?';
+    db.query(sql, [userId, name.toLowerCase()], (err) => {
+      if (err) return callback(err);
+      getFolders(userId, (err2, folders) => {
+        if (err2) return callback(err2);
+        callback(null, { success: true, folders });
+      });
+    });
   },
 
-  deleteFolder(userId, name) {
-    const store = getFoldersStore();
-    if (!store[userId]) {
-      store[userId] = JSON.parse(JSON.stringify(DEFAULT_FOLDERS));
-    }
+  deleteFolder(userId, name, callback) {
     // Don't allow deleting default folders
     const isDefault = DEFAULT_FOLDERS.some(f => f.name.toLowerCase() === name.toLowerCase());
     if (isDefault) {
-      return { success: false, error: 'Cannot delete default folders' };
+      return callback(null, { success: false, error: 'Cannot delete default folders' });
     }
     
-    store[userId] = store[userId].filter(f => f.name.toLowerCase() !== name.toLowerCase());
-    saveFoldersStore(store);
-    return { success: true, folders: store[userId] };
+    db.query('DELETE FROM [folder] WHERE userid = ? AND LOWER(name) = ?', [userId, name.toLowerCase()], (err) => {
+      if (err) return callback(err);
+      
+      // Clean up notes referencing this folder style
+      db.query("UPDATE [note] SET style = '' WHERE authorID = ? AND LOWER(style) = ?", [userId, name.toLowerCase()], (err2) => {
+        if (err2) console.error("❌ Failed to clean note styles for deleted folder:", err2);
+        
+        getFolders(userId, (err3, folders) => {
+          if (err3) return callback(err3);
+          callback(null, { success: true, folders });
+        });
+      });
+    });
   }
 };

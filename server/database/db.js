@@ -86,6 +86,8 @@ function queryWrapper(sqlQuery, params, callback) {
           });
 
           processedSql = processedSql.replace(/\bSET\s+\?/i, `(${insertCols}) VALUES (${paramNames.join(', ')})`);
+          // Append identity query to get scope identity in SQL Server
+          processedSql += '; SELECT SCOPE_IDENTITY() AS insertId;';
         }
       } 
       // 3. Translate standard question mark (?) placeholders to MSSQL @p0, @p1, ...
@@ -102,8 +104,14 @@ function queryWrapper(sqlQuery, params, callback) {
       // Execute query
       const result = await request.query(processedSql);
       
-      // Invoke callback returning recordset to match MySQL driver output format
-      callback(null, result.recordset || []);
+      // Mimic MySQL insert result format if it was an INSERT
+      if (processedSql.includes('insertId')) {
+        const insertId = result.recordset && result.recordset[0] ? result.recordset[0].insertId : null;
+        callback(null, { insertId, affectedRows: result.rowsAffected[0] || 1 });
+      } else {
+        // Invoke callback returning recordset to match MySQL driver output format
+        callback(null, result.recordset || []);
+      }
     } catch (err) {
       console.error("❌ SQL Server query execution error:", err.message);
       console.error("Statement was:", sqlQuery);

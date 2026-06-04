@@ -50,23 +50,37 @@ router.post('/', isLoggedIn, (req, res) => {
   };
 
   const sql = 'INSERT INTO [note] SET ?';
-  db.query(sql, note, (err, rows) => {
+  db.query(sql, note, (err, result) => {
     if (err) {
       console.error("❌ Error inserting note:", err);
       return res.status(500).json({ error: "Database error" });
     }
 
-    // Retrieve the newly inserted note to get the generated noteid
-    db.query('SELECT * FROM [note] WHERE authorID = ? ORDER BY noteid DESC', [req.user.userid], (err, selectRows) => {
-      if (err || !selectRows.length) {
-        return res.json({ success: true, message: 'Successfully created a new Note!', note });
-      }
-      res.json({ 
-        success: true, 
-        message: 'Successfully created a new Note!', 
-        note: selectRows[0] 
+    const noteId = result.insertId;
+    if (noteId) {
+      db.query('SELECT * FROM [note] WHERE noteid = ?', [noteId], (err, selectRows) => {
+        if (err || !selectRows.length) {
+          return res.json({ success: true, message: 'Successfully created a new Note!', note: { ...note, noteid: noteId } });
+        }
+        res.json({ 
+          success: true, 
+          message: 'Successfully created a new Note!', 
+          note: selectRows[0] 
+        });
       });
-    });
+    } else {
+      // Fallback retrieve
+      db.query('SELECT * FROM [note] WHERE authorID = ? ORDER BY noteid DESC', [req.user.userid], (err, selectRows) => {
+        if (err || !selectRows.length) {
+          return res.json({ success: true, message: 'Successfully created a new Note!', note });
+        }
+        res.json({ 
+          success: true, 
+          message: 'Successfully created a new Note!', 
+          note: selectRows[0] 
+        });
+      });
+    }
   });
 });
 
