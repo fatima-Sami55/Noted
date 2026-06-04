@@ -75,32 +75,37 @@ async function sendEmail({ to, subject, templateName, variables }) {
 }
 
 module.exports = {
-  sendVerificationEmail: (to, username, token) =>
-    sendEmail({
+  sendVerificationEmail: (to, username, token) => {
+    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+    return sendEmail({
       to, 
       subject: 'Verify your Noted account',
       templateName: 'verifyEmail.html',
       variables: {
         username,
-        verify_url: `${process.env.CLIENT_URL}/verify-email?token=${token}`,
-        expiry_hours: process.env.TOKEN_EXPIRY_HOURS || 16,
+        verify_url: `${clientUrl}/verify-email?token=${token}`,
+        expiry_hours: process.env.TOKEN_EXPIRY_HOURS || 2,
       },
-    }),
+    });
+  },
 
-  sendPasswordResetEmail: (to, username, token) =>
-    sendEmail({
+  sendPasswordResetEmail: (to, username, token) => {
+    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+    return sendEmail({
       to,
       subject: 'Reset your Noted password',
       templateName: 'resetPassword.html',
       variables: {
         username,
-        reset_url: `${process.env.CLIENT_URL}/reset-password?token=${token}`,
-        expiry_hours: process.env.TOKEN_EXPIRY_HOURS || 16,
+        reset_url: `${clientUrl}/reset-password?token=${token}`,
+        expiry_hours: process.env.TOKEN_EXPIRY_HOURS || 2,
       },
-    }),
+    });
+  },
 
-  sendPasswordChangedEmail: (to, username) =>
-    sendEmail({
+  sendPasswordChangedEmail: (to, username) => {
+    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
+    return sendEmail({
       to,
       subject: 'Your Noted password was changed',
       templateName: 'passwordChanged.html',
@@ -109,7 +114,8 @@ module.exports = {
         changed_at: new Date().toLocaleString('en-US', {
           dateStyle: 'long', timeStyle: 'short'
         }),
-        support_url: `${process.env.CLIENT_URL}/support`,
+        support_url: `${clientUrl}/support`,
       },
-    }),
+    });
+  },
 };
