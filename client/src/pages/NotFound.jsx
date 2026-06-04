@@ -8,7 +8,7 @@ export function NotFound() {
       <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-sm border border-slate-200/50 text-center space-y-6">
         <div className="flex justify-center">
           <div className="w-24 h-24 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 shadow-inner">
-            <HelpCircle className="w-12 h-12 stroke-[1.5] animate-bounce" />
+            <HelpCircle className="w-12 h-12 stroke-[1.5]" />
           </div>
         </div>
 
@@ -21,7 +21,7 @@ export function NotFound() {
 
         <Link
           to="/"
-          className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-650 hover:bg-indigo-700 text-white rounded-full font-semibold shadow-sm hover:shadow transition-all duration-200 text-sm cursor-pointer"
+          className="inline-flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-full font-semibold shadow-sm hover:shadow transition-all duration-200 text-sm cursor-pointer"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Dashboard</span>

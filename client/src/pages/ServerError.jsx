@@ -7,7 +7,7 @@ export function ServerError({ onRetry }) {
       <div className="w-full max-w-md p-8 bg-white rounded-3xl shadow-sm border border-slate-200/50 text-center space-y-6">
         <div className="flex justify-center">
           <div className="w-24 h-24 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 shadow-inner">
-            <AlertTriangle className="w-12 h-12 stroke-[1.5] animate-pulse" />
+            <AlertTriangle className="w-12 h-12 stroke-[1.5]" />
           </div>
         </div>
 
