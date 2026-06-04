@@ -3,6 +3,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://note-taking-app-ky1n.onrender.com/api/:path*"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/index.html"
     }
   ]
 }
