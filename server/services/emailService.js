@@ -1,17 +1,6 @@
-const nodemailer = require('nodemailer');
 const fs = require('fs');
 const path = require('path');
-
-// Configure Nodemailer transporter with Brevo SMTP details
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_SERVER || 'smtp-relay.brevo.com',
-  port: parseInt(process.env.BREVO_PORT || '587'),
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: process.env.BREVO_LOGIN,
-    pass: process.env.BREVO_API_KEY
-  }
-});
+const https = require('https');
 
 // Load and populate HTML template
 function loadTemplate(templateName, variables) {
@@ -23,17 +12,66 @@ function loadTemplate(templateName, variables) {
   return html;
 }
 
+function sendEmailViaHttp(payload, apiKey) {
+  return new Promise((resolve, reject) => {
+    const data = JSON.stringify(payload);
+    const options = {
+      hostname: 'api.brevo.com',
+      port: 443,
+      path: '/v3/smtp/email',
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'api-key': apiKey,
+        'content-type': 'application/json',
+        'content-length': Buffer.byteLength(data)
+      }
+    };
+
+    const req = https.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          resolve(JSON.parse(body || '{}'));
+        } else {
+          reject(new Error(`Brevo API Error (${res.statusCode}): ${body}`));
+        }
+      });
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.write(data);
+    req.end();
+  });
+}
+
 async function sendEmail({ to, subject, templateName, variables }) {
   const html = loadTemplate(templateName, variables);
 
-  const mailOptions = {
-    from: `Noted <${process.env.BREVO_FROM_EMAIL || 'noreply@notedapp.site'}>`,
-    to,
+  const payload = {
+    sender: {
+      name: 'Noted',
+      email: process.env.BREVO_FROM_EMAIL || 'noreply@notedapp.site'
+    },
+    to: [
+      {
+        email: to
+      }
+    ],
     subject,
-    html
+    htmlContent: html
   };
 
-  return await transporter.sendMail(mailOptions);
+  const apiKey = process.env.BREVO_API_KEY;
+  if (!apiKey) {
+    throw new Error('BREVO_API_KEY environment variable is not defined.');
+  }
+
+  return await sendEmailViaHttp(payload, apiKey);
 }
 
 module.exports = {
