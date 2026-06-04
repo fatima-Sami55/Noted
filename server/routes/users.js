@@ -45,10 +45,10 @@ router.post('/register', (req, res, next) => {
     return res.status(400).json({ error: 'Invalid email format.' });
   }
 
-  // Password complexity: min 8 characters, at least 1 number
-  const passwordRegex = /^(?=.*[0-9]).{8,}$/;
+  // Password complexity: min 8 characters, lowercase, uppercase, digit, and special character
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&#]).{8,}$/;
   if (!passwordRegex.test(password)) {
-    return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one number.' });
+    return res.status(400).json({ error: 'Password must be at least 8 characters long, contain uppercase & lowercase letters, at least one number, and a special character.' });
   }
 
   db.query('SELECT email FROM [user] WHERE email = ?', [email.trim()], (err, result) => {
@@ -326,10 +326,10 @@ router.post('/reset-password', (req, res, next) => {
       return res.status(400).json({ error: 'Reset link has expired.' });
     }
 
-    // Password validation: min 8 characters, at least 1 number
-    const passwordRegex = /^(?=.*[0-9]).{8,}$/;
+    // Password validation: min 8 characters, lowercase, uppercase, digit, and special character
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&#]).{8,}$/;
     if (!passwordRegex.test(new_password)) {
-      return res.status(400).json({ error: 'Password must be at least 8 characters long and contain at least one number.' });
+      return res.status(400).json({ error: 'Password must be at least 8 characters long, contain uppercase & lowercase letters, at least one number, and a special character.' });
     }
 
     const salt = bcrypt.genSaltSync(12);

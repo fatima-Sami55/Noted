@@ -14,9 +14,39 @@ export function ResetPassword({ showToast }) {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
 
-  // Password validations
+  // Password components check
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const hasSpecial = /[@$!%*?&#]/.test(password);
   const isLengthValid = password.length >= 8;
-  const hasNumber = /[0-9]/.test(password);
+
+  const getPasswordStrength = () => {
+    let score = 0;
+    if (isLengthValid) score++;
+    if (hasLower && hasUpper) score++;
+    if (hasDigit) score++;
+    if (hasSpecial) score++;
+    return score;
+  };
+
+  const getPasswordStrengthLabel = () => {
+    const score = getPasswordStrength();
+    if (score === 1) return "Weak";
+    if (score === 2) return "Fair";
+    if (score === 3) return "Good";
+    if (score === 4) return "Strong";
+    return "Very Weak";
+  };
+
+  const getPasswordStrengthColor = () => {
+    const score = getPasswordStrength();
+    if (score === 1) return "bg-rose-500";
+    if (score === 2) return "bg-amber-500";
+    if (score === 3) return "bg-amber-500";
+    if (score === 4) return "bg-emerald-500";
+    return "bg-slate-300";
+  };
 
   useEffect(() => {
     if (!token) {
@@ -33,8 +63,8 @@ export function ResetPassword({ showToast }) {
       return;
     }
 
-    if (!isLengthValid || !hasNumber) {
-      setError('Password must be at least 8 characters long and contain at least one number.');
+    if (!isLengthValid || !hasLower || !hasUpper || !hasDigit || !hasSpecial) {
+      setError("Password does not meet the strong password requirements.");
       return;
     }
 
@@ -113,14 +143,46 @@ export function ResetPassword({ showToast }) {
               />
             </div>
             
+            {/* Dynamic Password Strength Indicator */}
             {password && (
-              <div className="mt-2 space-y-1 text-[11px] font-medium text-slate-400">
-                <p className={isLengthValid ? 'text-emerald-600 font-bold' : ''}>
-                  • At least 8 characters
-                </p>
-                <p className={hasNumber ? 'text-emerald-600 font-bold' : ''}>
-                  • At least 1 number
-                </p>
+              <div className="mt-3 space-y-2 p-3 bg-slate-50 border border-slate-200/50 rounded-2xl transition-all duration-300">
+                <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider">
+                  <span className="text-slate-400">Strength</span>
+                  <span className={
+                    getPasswordStrength() === 1 ? "text-rose-600" :
+                    getPasswordStrength() === 2 ? "text-amber-600" :
+                    getPasswordStrength() === 3 ? "text-amber-600" :
+                    getPasswordStrength() === 4 ? "text-emerald-600" : "text-slate-400"
+                  }>
+                    {getPasswordStrengthLabel()}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5 h-1 w-full bg-slate-200/60 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all duration-300 ${getPasswordStrength() >= 1 ? getPasswordStrengthColor() : 'bg-slate-200'}`} />
+                  <div className={`h-full rounded-full transition-all duration-300 ${getPasswordStrength() >= 2 ? getPasswordStrengthColor() : 'bg-slate-200'}`} />
+                  <div className={`h-full rounded-full transition-all duration-300 ${getPasswordStrength() >= 3 ? getPasswordStrengthColor() : 'bg-slate-200'}`} />
+                  <div className={`h-full rounded-full transition-all duration-300 ${getPasswordStrength() >= 4 ? getPasswordStrengthColor() : 'bg-slate-200'}`} />
+                </div>
+                
+                {/* Requirements Checklist */}
+                <ul className="text-[11px] font-medium text-slate-400 space-y-1 pt-1">
+                  <li className={`flex items-center gap-1.5 transition-colors duration-200 ${isLengthValid ? 'text-emerald-600 font-semibold' : ''}`}>
+                    <span className={`w-1 h-1 rounded-full ${isLengthValid ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                    At least 8 characters
+                  </li>
+                  <li className={`flex items-center gap-1.5 transition-colors duration-200 ${(hasLower && hasUpper) ? 'text-emerald-600 font-semibold' : ''}`}>
+                    <span className={`w-1 h-1 rounded-full ${(hasLower && hasUpper) ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                    Uppercase & lowercase letters
+                  </li>
+                  <li className={`flex items-center gap-1.5 transition-colors duration-200 ${hasDigit ? 'text-emerald-600 font-semibold' : ''}`}>
+                    <span className={`w-1 h-1 rounded-full ${hasDigit ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                    At least one number (0-9)
+                  </li>
+                  <li className={`flex items-center gap-1.5 transition-colors duration-200 ${hasSpecial ? 'text-emerald-600 font-semibold' : ''}`}>
+                    <span className={`w-1 h-1 rounded-full ${hasSpecial ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                    Special character (@$!%*?&#)
+                  </li>
+                </ul>
               </div>
             )}
           </div>
