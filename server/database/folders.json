@@ -1,0 +1,16 @@
+{
+  "13": [
+    {
+      "name": "Personal",
+      "starred": true
+    },
+    {
+      "name": "Ideas",
+      "starred": true
+    },
+    {
+      "name": "Tasks",
+      "starred": false
+    }
+  ]
+}

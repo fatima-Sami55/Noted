@@ -1,0 +1,221 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'DM Sans', system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, serif;
+  
+  /* Custom Pastel Colors */
+  --color-pastel-sky: #e0f2fe;
+  --color-pastel-rose: #ffe4e6;
+  --color-pastel-amber: #fef3c7;
+  --color-pastel-emerald: #d1fae5;
+  --color-pastel-violet: #ede9fe;
+  --color-pastel-blue: #dbeafe;
+  --color-pastel-orange: #ffedd5;
+  --color-pastel-pink: #fce7f3;
+  --color-pastel-purple: #f3e8ff;
+  --color-pastel-gray: #f3f4f6;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  background-color: #f9f8f5;
+  min-height: 100vh;
+  color: #334155;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom styles for React Calendar widget to match the design */
+.react-calendar {
+  width: 100% !important;
+  max-width: 100%;
+  background: white;
+  border: none !important;
+  font-family: inherit;
+  line-height: 1.125em;
+  padding: 12px;
+  border-radius: 1rem;
+}
+
+.react-calendar__navigation button {
+  min-width: 32px;
+  background: none;
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  border-radius: 0.375rem;
+  padding: 4px;
+}
+
+.react-calendar__navigation button:enabled:hover,
+.react-calendar__navigation button:enabled:focus {
+  background-color: #f1f5f9;
+}
+
+.react-calendar__month-view__weekdays {
+  text-align: center;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: #94a3b8;
+  padding-bottom: 8px;
+}
+
+.react-calendar__month-view__weekdays__weekday abbr {
+  text-decoration: none;
+}
+
+.react-calendar__tile {
+  max-width: 100%;
+  padding: 8px 4px !important;
+  background: none;
+  text-align: center;
+  line-height: 16px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #334155;
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.react-calendar__tile:enabled:hover,
+.react-calendar__tile:enabled:focus {
+  background-color: #f1f5f9;
+}
+
+.react-calendar__tile--now {
+  background: #eff6ff !important;
+  color: #2563eb !important;
+  font-weight: 700;
+}
+
+.react-calendar__tile--active {
+  background: #3b82f6 !important;
+  color: white !important;
+  font-weight: 600;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.4);
+}
+
+.react-calendar__month-view__days__day--neighboringMonth {
+  color: #cbd5e1 !important;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Scrollbar None */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Modal Animations */
+@keyframes modal-fade-in {
+  from {
+    background-color: rgba(15, 23, 42, 0);
+    backdrop-filter: blur(0px);
+  }
+  to {
+    background-color: rgba(15, 23, 42, 0.15);
+    backdrop-filter: blur(4px);
+  }
+}
+
+@keyframes modal-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
+
+.animate-modal-backdrop {
+  animation: modal-fade-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-modal-content {
+  animation: modal-scale-in 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Checklist strike-through animation */
+.strike-through {
+  position: relative;
+}
+
+.strike-through::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: #94a3b8;
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.25s ease-out;
+}
+
+.strike-through.active::after {
+  transform: scaleX(1);
+}
+
+/* Global pointer cursor overrides for interactive elements */
+button,
+select,
+input[type="checkbox"],
+input[type="radio"],
+input[type="submit"],
+input[type="button"],
+a,
+[role="button"] {
+  cursor: pointer !important;
+}
+
+/* Notebook card hover spring-like effects */
+.notebook-card {
+  box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+  transition: transform 280ms cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 280ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.notebook-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.12);
+}
+
+
+

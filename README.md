@@ -1,68 +1,132 @@
-📓 Note-Taking App
-==================
+# Noted - Rich Note-Taking Platform
 
-Welcome to the **Note-Taking App**! 🎉 This is a simple web application built with Node.js and MySQL, designed to allow users to create, edit, and delete notes. 📝
+Noted is a modern, premium card-based note-taking application designed for seamless digital organization. Built with a rich React frontend and a secure Node.js REST API backend, the platform supports custom checklists, sticker badges, dynamic color palettes, and calendar reminders. 
 
-🌐 Check out the [Live Demo](https://note-taking-app-ky1n.onrender.com)!
+---
 
-🛠️ Features
-------------
+## Technology Stack
 
-*   **Create Notes:** Add new notes with a title and content. ✍️
-*   **Edit Notes:** Modify the content of any existing note. ✏️
-*   **Delete Notes:** Remove notes that are no longer needed. 🗑️
-*   **Persistent Data:** Notes are saved in a MySQL database, so they are available even after restarting the app. 🔒
-*   **Simple Interface:** A clean, user-friendly UI for managing your notes. 🎨
+| Layer | Technology | Key Service / Feature |
+| :--- | :--- | :--- |
+| **Frontend** | React 19, Vite, Tailwind CSS v4 | Hot Module Replacement (HMR), Lucide Icons |
+| **Backend** | Node.js, Express | RESTful JSON API, MVC routing, Structured controllers |
+| **Database** | Microsoft SQL Server (T-SQL) | Connection pooling, session state persistency |
+| **Authentication** | Passport.js, Bcryptjs | Session-based authentication, Salted password hashes |
+| **Email/SMTP** | Nodemailer, Brevo | Account confirmation emails, secure password resets |
+| **Security** | Helmet, Express Rate Limit | XSS mitigation, secure cookies, brute-force throttling |
 
-🖥️ Technologies Used
------------------------
+---
 
-*   **Node.js:** JavaScript runtime for building the backend. 🚀
-*   **Express:** Web framework for Node.js to handle HTTP requests. 🌐
-*   **MySQL:** Database to store user notes. 🗄️
-*   **EJS:** Template engine to render dynamic HTML views. 🖥️
-*   **Passport:** Authentication middleware for handling user login. 🔑
-*   **Bcryptjs:** For securely hashing passwords. 🔒
-*   **Connect-Flash:** For displaying flash messages (success, error, etc.). ⚡
-*   **Dotenv:** For managing environment variables. ⚙️
+## Repository Structure
 
-📝 Installation
----------------
+```tree
+noteapp-main/
+├── client/                 # React Frontend Application (Vite dev server)
+│   ├── public/             # Static assets (illustrations, avatars, favicon)
+│   ├── src/
+│   │   ├── components/     # Reusable UI widgets (NoteEditor, Sidebar, etc.)
+│   │   ├── pages/          # Full-view layout routing (Login, ForgotPassword)
+│   │   ├── App.jsx         # App container and state management
+│   │   └── main.jsx        # App entry point
+│   ├── package.json
+│   └── vite.config.js      # Dev server port & API proxy setup
+└── server/                 # Express Backend API Server
+    ├── database/           # DB connection pools, migrations and cache stores
+    ├── routes/             # Express API endpoints
+    ├── services/           # Nodemailer integration
+    ├── templates/          # Email transactional HTML templates
+    ├── utils/              # Expiry token helpers
+    ├── middleware.js       # Authentication and authorization guards
+    ├── app.js              # Application entry, middleware stacks and server initialization
+    └── package.json
+```
 
-### Clone the Repository
+---
 
-1\. To get started, clone the repository to your local machine using the following command:
+## Production & Security Standards
 
-    git clone https://github.com/fatima-Sami55/Note-App.git
+The application has been refined to follow industry-standard security checklist requirements:
+1. **SQL Injection Protection**: Fully parameterized queries for authorization checks and user note manipulation.
+2. **Brute-Force & Abuse Mitigation**: Throttling configured via `express-rate-limit` on endpoints such as login, signup, password-reset, and email verification.
+3. **HTTP Header Security**: Hardened headers set via `helmet` (Disables content type sniffing, enforces XSS protection, restricts frame embedding).
+4. **Secure Sessions**: Enforced `httpOnly`, `secure: true` (requires HTTPS), and `sameSite: 'none'` (facilitates cross-origin cookies) configurations when `NODE_ENV=production`.
+5. **No Data Leakage**: Standard Express error handlers are overridden in production to return generic messages and keep raw stack traces or database details redacted from logs sent to client.
+6. **Strict Validation**: Registration validation checking syntax formatting on emails and password strength complexity.
 
-### Install Dependencies
+---
 
-2\. Navigate to the project directory and install the required dependencies using npm:
+## Environment Configuration
 
-    cd Note-App
-    npm install
+Create a `.env` file in the `server` directory using the following keys:
 
-### Configure the MySQL Database
+```env
+# Database Credentials (MS SQL/Azure SQL Server)
+HOST=your-azure-db.database.windows.net
+USER=your_db_user
+PASSWORD=your_db_password
+DATABASE=Noted
+DB_PORT=1433
 
-3\. Make sure you have MySQL installed on your machine. 🖥️
+# Application Port
+PORT=3000
 
-4\. Create a database for the app. You can name it `note_app` or any name you prefer. 💾
+# Express Session Encryption Key
+SESSION_SECRET=your_complex_session_secret_key
 
-5\. Set up your environment variables by creating a `.env` file in the root directory and add the following content (update with your own credentials):
+# Brevo SMTP Configuration
+SMTP_SERVER=smtp-relay.brevo.com
+BREVO_PORT=587
+BREVO_LOGIN=your_brevo_smtp_login
+BREVO_API_KEY=your_brevo_api_key
+BREVO_FROM_EMAIL=noreply@yourdomain.com
 
-    DB_HOST=localhost
-    DB_USER=root
-    DB_PASSWORD=yourpassword
-    DB_NAME=note_app
-    SESSION_SECRET=yourSecretKey
+# Client and Token Expirations
+CLIENT_URL=http://localhost:5173
+TOKEN_EXPIRY_HOURS=16
+```
 
-🚀 Run the Application
-----------------------
+---
 
-Start the app by running:
+## Setup & Local Execution
 
-    npm start
+Follow these steps to run both the frontend and backend in your local environment.
 
-The app should now be running at [http://localhost:3000](http://localhost:3000) 🎉
+### 1. Database Migrations
+Make sure you have Microsoft SQL Server running. Run the following migrations inside the `server/` directory to create the tables and alter email/token columns:
 
-Made with 🔥 by Fatima
+```bash
+cd server
+npm install
+node database/migrate.js
+node database/migrateEmailColumns.js
+```
+
+### 2. Run Backend API
+With dependencies installed and migrations complete, start the Nodemon dev server:
+
+```bash
+npm run dev
+```
+The server will boot up on `http://localhost:3000`.
+
+### 3. Run Frontend Client
+Open a new terminal window, navigate to the `client/` folder, install packages and start the Vite development server:
+
+```bash
+cd client
+npm install
+npm run dev
+```
+The client will open up on `http://localhost:5173`. Vite is preconfigured to proxy all `/api/*` fetch requests directly to the backend port.
+
+---
+
+## Deployment Build
+
+To build the client bundle for production deployment, run:
+
+```bash
+cd client
+npm run build
+```
+This generates a flat static directory inside `client/dist/` ready to be served from any CDN or static hosting platform.

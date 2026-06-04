@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify your Noted account</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f9f8f5;
+      font-family: 'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+    }
+    .wrapper {
+      padding: 32px 16px;
+    }
+    .card {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      box-shadow: none;
+      border: 1px solid #ede9e3;
+    }
+    .wordmark {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-style: italic;
+      font-size: 22px;
+      color: #1a1a2e;
+      margin: 0;
+      line-height: 1;
+    }
+    .underline {
+      height: 2px;
+      width: 40px;
+      background-color: #4f46e5;
+      margin-top: 6px;
+      margin-bottom: 24px;
+    }
+    .divider {
+      height: 1px;
+      background-color: #f3f0eb;
+      margin: 24px 0;
+      border: none;
+    }
+    h1 {
+      font-family: 'Instrument Serif', Georgia, serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: #1a1a2e;
+      margin-top: 0;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #4b5563;
+      margin-top: 0;
+      margin-bottom: 16px;
+      text-align: left;
+    }
+    .btn {
+      display: inline-block;
+      background-color: #4f46e5;
+      color: #ffffff !important;
+      padding: 14px 32px;
+      border-radius: 999px;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      letter-spacing: 0.02em;
+      margin: 24px 0;
+      text-align: center;
+    }
+    .muted {
+      font-size: 13px;
+      color: #9ca3af;
+      margin-top: 8px;
+      text-align: left;
+    }
+    .footer {
+      font-size: 12px;
+      color: #9ca3af;
+      margin-top: 24px;
+      text-align: left;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <h2 class="wordmark">noted.</h2>
+      <div class="underline"></div>
+      <hr class="divider" />
+      
+      <h1>Confirm your email</h1>
+      <p>Hi {{username}},</p>
+      <p>Welcome to Noted — your personal space for ideas, tasks, and thoughts. Please verify your email address to activate your account. This link expires in {{expiry_hours}} hours.</p>
+      
+      <a href="{{verify_url}}" class="btn">Verify Email Address</a>
+      
+      <p class="muted">If you didn't create a Noted account, you can safely ignore this email.</p>
+      
+      <hr class="divider" />
+      <div class="footer">
+        <p style="margin: 0; font-size: 12px; color: #9ca3af;">You received this email because you have an account on Noted.</p>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: #9ca3af;">&copy; 2025 Noted. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
