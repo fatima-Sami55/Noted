@@ -10,6 +10,8 @@ import Register from './pages/Register';
 import VerifyEmail from './pages/VerifyEmail';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import NotFound from './pages/NotFound';
+import ServerError from './pages/ServerError';
 import { Search, Grid, List as ListIcon, Plus, Sparkles, Menu, ShieldAlert, Home, Calendar as CalendarIcon, User, X, LogOut } from 'lucide-react';
 import { WeekCalendar } from './components/WeekCalendar';
 
@@ -18,6 +20,7 @@ export function App() {
   // Session & Authentication State
   const [user, setUser] = useState(null);
   const [loadingSession, setLoadingSession] = useState(true);
+  const [serverError, setServerError] = useState(false);
   const [authView, setAuthView] = useState('login'); // 'login' | 'register'
 
   // Notes and UI State
@@ -84,14 +87,20 @@ export function App() {
   const checkSession = async () => {
     try {
       const res = await fetch('/api/me');
+      if (res.status >= 500) {
+        setServerError(true);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setUser(data);
+        setServerError(false);
       } else {
         setUser(null);
       }
     } catch (e) {
       console.error("Session check failed:", e);
+      setServerError(true);
       setUser(null);
     } finally {
       setLoadingSession(false);
@@ -101,24 +110,36 @@ export function App() {
   const fetchNotes = async () => {
     try {
       const res = await fetch('/api/notes');
+      if (res.status >= 500) {
+        setServerError(true);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setNotes(data);
+        setServerError(false);
       }
     } catch (e) {
       console.error("Failed to load notes:", e);
+      setServerError(true);
     }
   };
 
   const fetchFolders = async () => {
     try {
       const res = await fetch('/api/folders');
+      if (res.status >= 500) {
+        setServerError(true);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         setFolders(data);
+        setServerError(false);
       }
     } catch (e) {
       console.error("Failed to load folders:", e);
+      setServerError(true);
     }
   };
 
@@ -256,8 +277,8 @@ export function App() {
 
       if (res.ok) {
         const savedNote = await res.json();
-        if (!isEditing && savedNote && savedNote.noteid) {
-          setNotes(prev => prev.map(n => n.noteid === tempId ? savedNote : n));
+        if (!isEditing && savedNote && savedNote.note) {
+          setNotes(prev => prev.map(n => n.noteid === tempId ? savedNote.note : n));
         } else {
           fetchNotes();
         }
@@ -447,21 +468,25 @@ export function App() {
     return "My Digital Cards";
   };
 
+  // Handle Server Error (500) view
+  if (serverError) {
+    return (
+      <ServerError 
+        onRetry={() => {
+          setServerError(false);
+          setLoadingSession(true);
+          checkSession();
+        }} 
+      />
+    );
+  }
+
   // Loading indicator for checking session
   if (loadingSession) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#f9f8f5]">
         <div className="w-10 h-10 border-[3px] border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
         <p className="text-slate-400 font-medium text-sm mt-4 animate-pulse">Connecting...</p>
-      </div>
-    );
-  }
-
-  // Not Logged In / Public pages loading check
-  if (loadingSession) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f9f8f5]">
-        <div className="w-10 h-10 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
@@ -828,8 +853,9 @@ export function App() {
           } 
         />
 
-        {/* Catch-all redirect */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {/* Error and Not Found pages */}
+        <Route path="/404" element={<NotFound />} />
+        <Route path="*" element={<Navigate to="/404" replace />} />
       </Routes>
 
       {/* Toast Notifications */}

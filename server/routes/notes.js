@@ -17,8 +17,12 @@ router.get('/', isLoggedIn, (req, res) => {
 
 // GET /api/notes/:id - Get a specific note
 router.get('/:id', isLoggedIn, (req, res) => {
+  const noteId = parseInt(req.params.id);
+  if (isNaN(noteId) || noteId > 2147483647 || noteId < -2147483648) {
+    return res.status(404).json({ error: 'Note not found' });
+  }
   const sql = 'SELECT * FROM [note] WHERE noteid = ?';
-  db.query(sql, [req.params.id], (err, rows) => {
+  db.query(sql, [noteId], (err, rows) => {
     if (err) {
       console.error("❌ Error fetching note:", err);
       return res.status(500).json({ error: "Database error" });
@@ -68,8 +72,9 @@ router.post('/', isLoggedIn, (req, res) => {
 
 // PUT /api/notes/:id - Update an existing note
 router.put('/:id', isLoggedIn, isAuthor, (req, res) => {
+  const noteId = parseInt(req.params.id);
   const bodyContent = typeof req.body.body === 'object' ? JSON.stringify(req.body.body) : req.body.body;
-
+  
   const note = {
     heading: req.body.heading || 'Untitled Note',
     body: bodyContent || '{}',
@@ -79,19 +84,20 @@ router.put('/:id', isLoggedIn, isAuthor, (req, res) => {
   };
 
   const sql = 'UPDATE [note] SET ? WHERE noteid = ?';
-  db.query(sql, [note, req.params.id], (err, result) => {
+  db.query(sql, [note, noteId], (err, result) => {
     if (err) {
       console.error("❌ Error updating note:", err);
       return res.status(500).json({ error: "Database error" });
     }
-    res.json({ success: true, message: 'Successfully updated the Note!', note: { ...note, noteid: parseInt(req.params.id) } });
+    res.json({ success: true, message: 'Successfully updated the Note!', note: { ...note, noteid: noteId } });
   });
 });
 
 // DELETE /api/notes/:id - Delete a note
 router.delete('/:id', isLoggedIn, isAuthor, (req, res) => {
+  const noteId = parseInt(req.params.id);
   const sql = 'DELETE FROM [note] WHERE noteid = ?';
-  db.query(sql, [req.params.id], (err, result) => {
+  db.query(sql, [noteId], (err, result) => {
     if (err) {
       console.error("❌ Error deleting note:", err);
       return res.status(500).json({ error: "Database error" });
