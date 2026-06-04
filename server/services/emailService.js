@@ -104,7 +104,6 @@ module.exports = {
   },
 
   sendPasswordChangedEmail: (to, username) => {
-    const clientUrl = (process.env.CLIENT_URL || 'http://localhost:5173').replace(/\/+$/, '');
     return sendEmail({
       to,
       subject: 'Your Noted password was changed',
@@ -114,7 +113,7 @@ module.exports = {
         changed_at: new Date().toLocaleString('en-US', {
           dateStyle: 'long', timeStyle: 'short'
         }),
-        support_url: `${clientUrl}/support`,
+        support_url: 'mailto:support@notedapp.site',
       },
     });
   },
